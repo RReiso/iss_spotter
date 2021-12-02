@@ -8,10 +8,12 @@ const request = require("request");
  *   - An error, if any (nullable)
  *   - The IP address as a string (null if error). Example: "162.245.144.188"
  */
-const fetchMyIP = function(callback) {
+const fetchMyIP = callback =>{
   request('https://api.ipify.org?format=json', (error, response, body) => {
-    if (error) return callback(error, null);
-
+    if (error) {
+      callback(error, null);
+      return;
+    }
     if (response.statusCode !== 200) {
       callback(Error(`Status Code ${response.statusCode} when fetching IP: ${body}`), null);
       return;
@@ -22,4 +24,25 @@ const fetchMyIP = function(callback) {
   });
 };
 
-module.exports = { fetchMyIP };
+const fetchCoordsByIP = (ip, callback) =>{
+  request(`https://freegeoip.app/json/${ip}`, (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+
+    if (response.statusCode !== 200) {
+      callback(Error(`Status Code ${response.statusCode} when fetching Coordinates for IP: ${body}`), null);
+      return;
+    }
+
+    const coordinates = {};
+    const data = JSON.parse(body);
+    coordinates.latitude = data.latitude;
+    coordinates.longitude = data.longitude;
+
+    callback(null, coordinates);
+  });
+};
+
+module.exports = { fetchMyIP, fetchCoordsByIP };
